@@ -12,6 +12,7 @@ chai.use(chaiHttp)
 
 const user = {
   credentials: {
+    name: 'Myname',
     email: 'foo@bar.baz',
     password: '12345',
     password_confirmation: '12345'
@@ -41,6 +42,7 @@ describe('Users', () => {
       .then(() => bcrypt.hash(user.credentials.password, 10))
       .then(hash => {
         return {
+          name: user.credentials.name,
           email: user.credentials.email,
           hashedPassword: hash,
           token
@@ -102,6 +104,7 @@ describe('Users', () => {
               res.should.have.status(201)
               res.should.be.a('object')
               res.body.should.have.property('user')
+              res.body.should.have.property('name').eql(user.credentials.name)
               res.body.user.should.have.property('email').eql(user.credentials.email)
               done()
             })
@@ -126,14 +129,14 @@ describe('Users', () => {
         })
     })
 
-    it('the token should allow you to GET /lists', done => {
+    it('the token should allow you to GET /entries', done => {
       chai.request(server)
-        .get('/lists')
+        .get('/entries')
         .set('Authorization', `Token token=${token}`)
         .end((e, res) => {
           res.should.have.status(200)
-          res.body.should.have.property('lists')
-          res.body.lists.should.be.a('array')
+          res.body.should.have.property('entries')
+          res.body.entries.should.be.a('array')
           done()
         })
     })
