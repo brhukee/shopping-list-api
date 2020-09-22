@@ -1,6 +1,6 @@
 process.env.TESTENV = true
 
-let List = require('../app/models/list.js')
+let Entry = require('../app/models/entry.js')
 let User = require('../app/models/user')
 
 const crypto = require('crypto')
@@ -14,16 +14,16 @@ chai.use(chaiHttp)
 
 const token = crypto.randomBytes(16).toString('hex')
 let userId
-let listId
+let entryId
 
-describe('Lists', () => {
-  const listParams = {
-    title: '13 JavaScript tricks SEI instructors don\'t want you to know',
-    text: 'You won\'believe number 8!'
+describe('Entries', () => {
+  const entryParams = {
+    title: 'Entry Title',
+    text: 'Here is my blog entry.'
   }
 
   before(done => {
-    List.deleteMany({})
+    Entry.deleteMany({})
       .then(() => User.create({
         email: 'caleb',
         hashedPassword: '12345',
@@ -33,49 +33,49 @@ describe('Lists', () => {
         userId = user._id
         return user
       })
-      .then(() => List.create(Object.assign(listParams, {owner: userId})))
+      .then(() => Entry.create(Object.assign(entryParams, {owner: userId})))
       .then(record => {
-        listId = record._id
+        entryId = record._id
         done()
       })
       .catch(console.error)
   })
 
-  describe('GET /lists', () => {
-    it('should get all the lists', done => {
+  describe('GET /entries', () => {
+    it('should get all the entries', done => {
       chai.request(server)
-        .get('/lists')
+        .get('/entries')
         .set('Authorization', `Token token=${token}`)
         .end((e, res) => {
           res.should.have.status(200)
-          res.body.lists.should.be.a('array')
-          res.body.lists.length.should.be.eql(1)
+          res.body.entries.should.be.a('array')
+          res.body.entries.length.should.be.eql(1)
           done()
         })
     })
   })
 
-  describe('GET /lists/:id', () => {
-    it('should get one list', done => {
+  describe('GET /entries/:id', () => {
+    it('should get one entries', done => {
       chai.request(server)
-        .get('/lists/' + listId)
+        .get('/entries/' + entryId)
         .set('Authorization', `Token token=${token}`)
         .end((e, res) => {
           res.should.have.status(200)
-          res.body.list.should.be.a('object')
-          res.body.list.title.should.eql(listParams.title)
+          res.body.entry.should.be.a('object')
+          res.body.entry.title.should.eql(entryParams.title)
           done()
         })
     })
   })
 
-  describe('DELETE /lists/:id', () => {
-    let listId
+  describe('DELETE /entries/:id', () => {
+    let entryId
 
     before(done => {
-      List.create(Object.assign(listParams, { owner: userId }))
+      Entry.create(Object.assign(entryParams, { owner: userId }))
         .then(record => {
-          listId = record._id
+          entryId = record._id
           done()
         })
         .catch(console.error)
@@ -83,7 +83,7 @@ describe('Lists', () => {
 
     it('must be owned by the user', done => {
       chai.request(server)
-        .delete('/lists/' + listId)
+        .delete('/entries/' + entryId)
         .set('Authorization', `Bearer notarealtoken`)
         .end((e, res) => {
           res.should.have.status(401)
@@ -93,7 +93,7 @@ describe('Lists', () => {
 
     it('should be succesful if you own the resource', done => {
       chai.request(server)
-        .delete('/lists/' + listId)
+        .delete('/entries/' + entryId)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(204)
@@ -103,7 +103,7 @@ describe('Lists', () => {
 
     it('should return 404 if the resource doesn\'t exist', done => {
       chai.request(server)
-        .delete('/lists/' + listId)
+        .delete('/entries/' + entryId)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(404)
@@ -112,16 +112,16 @@ describe('Lists', () => {
     })
   })
 
-  describe('POST /lists', () => {
-    it('should not POST an list without a title', done => {
+  describe('POST /entries', () => {
+    it('should not POST an entry without a title', done => {
       let noTitle = {
         text: 'Untitled',
         owner: 'fakedID'
       }
       chai.request(server)
-        .post('/lists')
+        .post('/entries')
         .set('Authorization', `Bearer ${token}`)
-        .send({ list: noTitle })
+        .send({ entry: noTitle })
         .end((e, res) => {
           res.should.have.status(422)
           res.should.be.a('object')
@@ -129,15 +129,15 @@ describe('Lists', () => {
         })
     })
 
-    it('should not POST an list without text', done => {
+    it('should not POST an entry without text', done => {
       let noText = {
-        title: 'Not a very good list, is it?',
+        title: 'Not a very good entry, is it?',
         owner: 'fakeID'
       }
       chai.request(server)
-        .post('/lists')
+        .post('/entries')
         .set('Authorization', `Bearer ${token}`)
-        .send({ list: noText })
+        .send({ entry: noText })
         .end((e, res) => {
           res.should.have.status(422)
           res.should.be.a('object')
@@ -147,52 +147,52 @@ describe('Lists', () => {
 
     it('should not allow a POST from an unauthenticated user', done => {
       chai.request(server)
-        .post('/lists')
-        .send({ list: listParams })
+        .post('/entries')
+        .send({ entry: entryParams })
         .end((e, res) => {
           res.should.have.status(401)
           done()
         })
     })
 
-    it('should POST an list with the correct params', done => {
-      let validList = {
-        title: 'I ran a shell command. You won\'t believe what happened next!',
-        text: 'it was rm -rf / --no-preserve-root'
+    it('should POST an entry with the correct params', done => {
+      let validEntry = {
+        title: 'Entry Title',
+        text: 'Here is my blog post.'
       }
       chai.request(server)
-        .post('/lists')
+        .post('/entries')
         .set('Authorization', `Bearer ${token}`)
-        .send({ list: validList })
+        .send({ entry: validEntry })
         .end((e, res) => {
           res.should.have.status(201)
           res.body.should.be.a('object')
-          res.body.should.have.property('list')
-          res.body.list.should.have.property('title')
-          res.body.list.title.should.eql(validList.title)
+          res.body.should.have.property('entry')
+          res.body.entry.should.have.property('title')
+          res.body.entry.title.should.eql(validEntry.title)
           done()
         })
     })
   })
 
-  describe('PATCH /lists/:id', () => {
-    let listId
+  describe('PATCH /entries/:id', () => {
+    let entryId
 
     const fields = {
-      title: 'Find out which HTTP status code is your spirit animal',
-      text: 'Take this 4 question quiz to find out!'
+      title: 'Entry Title',
+      text: 'Here is my blog post.'
     }
 
     before(async function () {
-      const record = await List.create(Object.assign(listParams, { owner: userId }))
-      listId = record._id
+      const record = await Entry.create(Object.assign(entryParams, { owner: userId }))
+      entryId = record._id
     })
 
     it('must be owned by the user', done => {
       chai.request(server)
-        .patch('/lists/' + listId)
+        .patch('/entries/' + entryId)
         .set('Authorization', `Bearer notarealtoken`)
-        .send({ list: fields })
+        .send({ entry: fields })
         .end((e, res) => {
           res.should.have.status(401)
           done()
@@ -201,9 +201,9 @@ describe('Lists', () => {
 
     it('should update fields when PATCHed', done => {
       chai.request(server)
-        .patch(`/lists/${listId}`)
+        .patch(`/entries/${entryId}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ list: fields })
+        .send({ entry: fields })
         .end((e, res) => {
           res.should.have.status(204)
           done()
@@ -212,32 +212,32 @@ describe('Lists', () => {
 
     it('shows the updated resource when fetched with GET', done => {
       chai.request(server)
-        .get(`/lists/${listId}`)
+        .get(`/entires/${entryId}`)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(200)
           res.body.should.be.a('object')
-          res.body.list.title.should.eql(fields.title)
-          res.body.list.text.should.eql(fields.text)
+          res.body.entry.title.should.eql(fields.title)
+          res.body.entry.text.should.eql(fields.text)
           done()
         })
     })
 
     it('doesn\'t overwrite fields with empty strings', done => {
       chai.request(server)
-        .patch(`/lists/${listId}`)
+        .patch(`/entries/${entryId}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ list: { text: '' } })
+        .send({ entry: { text: '' } })
         .then(() => {
           chai.request(server)
-            .get(`/lists/${listId}`)
+            .get(`/entries/${entryId}`)
             .set('Authorization', `Bearer ${token}`)
             .end((e, res) => {
-              res.should.have.statList
+              res.should.have.status(200)
               res.body.should.be.a('object')
-              // console.log(res.body.list.text)
-              res.body.list.title.should.eql(fields.title)
-              res.body.list.text.should.eql(fields.text)
+              // console.log(res.body.entry.text)
+              res.body.entry.title.should.eql(fields.title)
+              res.body.entry.text.should.eql(fields.text)
               done()
             })
         })

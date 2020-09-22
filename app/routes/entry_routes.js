@@ -1,11 +1,10 @@
-
 // Express docs: http://expressjs.com/en/api.html
 const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
-// pull in Mongoose model for lists
-const List = require('../models/list')
+// pull in Mongoose model for entries
+const Entry = require('../models/entry')
 
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
@@ -18,7 +17,7 @@ const handle404 = customErrors.handle404
 const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
-// { list: { title: '', text: 'foo' } } -> { list: { text: 'foo' } }
+// { entry: { title: '', text: 'foo' } } -> { entry: { text: 'foo' } }
 const removeBlanks = require('../../lib/remove_blank_fields')
 // passing this as a second argument to `router.<verb>` will make it
 // so that a token MUST be passed for that route to be available
@@ -29,43 +28,43 @@ const requireToken = passport.authenticate('bearer', { session: false })
 const router = express.Router()
 
 // INDEX
-// GET /lists
-router.get('/list', requireToken, (req, res, next) => {
-  List.find()
-    .then(list => {
-      // `lists` will be an array of Mongoose documents
+// GET /entries
+router.get('/entries', requireToken, (req, res, next) => {
+  Entry.find()
+    .then(entries => {
+      // `entries` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
       // apply `.toObject` to each one
-      return lists.map(list => list.toObject())
+      return entries.map(entry => entry.toObject())
     })
-    // respond with status 200 and JSON of the lists
-    .then(lists => res.status(200).json({ lists: lists }))
+    // respond with status 200 and JSON of the entries
+    .then(entries => res.status(200).json({ entries: entries }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
 
 // SHOW
-// GET /lists/5a7db6c74d55bc51bdf39793
-router.get('/lists/:id', requireToken, (req, res, next) => {
+// GET /entries/5a7db6c74d55bc51bdf39793
+router.get('/entries/:id', requireToken, (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
-  List.findById(req.params.id)
+  Entry.findById(req.params.id)
     .then(handle404)
-    // if `findById` is succesful, respond with 200 and "list" JSON
-    .then(list => res.status(200).json({ list: list.toObject() }))
+    // if `findById` is succesful, respond with 200 and "entry" JSON
+    .then(entry => res.status(200).json({ entry: entry.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
 
 // CREATE
-// POST /lists
-router.post('/lists', requireToken, (req, res, next) => {
-  // set owner of new list to be current user
-  req.body.list.owner = req.user.id
+// POST /entries
+router.post('/entries', requireToken, (req, res, next) => {
+  // set owner of new entry to be current user
+  req.body.entry.owner = req.user.id
 
-  List.create(req.body.list)
-    // respond to succesful `create` with status 201 and JSON of new "list"
-    .then(list => {
-      res.status(201).json({ list: list.toObject() })
+  Entry.create(req.body.entry)
+    // respond to succesful `create` with status 201 and JSON of new "entry"
+    .then(entry => {
+      res.status(201).json({ entry: entry.toObject() })
     })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
@@ -74,21 +73,21 @@ router.post('/lists', requireToken, (req, res, next) => {
 })
 
 // UPDATE
-// PATCH /lists/5a7db6c74d55bc51bdf39793
-router.patch('/lists/:id', requireToken, removeBlanks, (req, res, next) => {
+// PATCH /entries/5a7db6c74d55bc51bdf39793
+router.patch('/entries/:id', requireToken, removeBlanks, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
-  delete req.body.list.owner
+  delete req.body.entry.owner
 
-  List.findById(req.params.id)
+  Entry.findById(req.params.id)
     .then(handle404)
-    .then(list => {
+    .then(entry => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
       // it will throw an error if the current user isn't the owner
-      requireOwnership(req, list)
+      requireOwnership(req, entry)
 
       // pass the result of Mongoose's `.update` to the next `.then`
-      return list.updateOne(req.body.list)
+      return entry.updateOne(req.body.entry)
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
@@ -97,15 +96,15 @@ router.patch('/lists/:id', requireToken, removeBlanks, (req, res, next) => {
 })
 
 // DESTROY
-// DELETE /lists/5a7db6c74d55bc51bdf39793
-router.delete('/lists/:id', requireToken, (req, res, next) => {
-  List.findById(req.params.id)
+// DELETE /entries/5a7db6c74d55bc51bdf39793
+router.delete('/entries/:id', requireToken, (req, res, next) => {
+  Entry.findById(req.params.id)
     .then(handle404)
-    .then(list => {
-      // throw an error if current user doesn't own `list`
-      requireOwnership(req, list)
-      // delete the list ONLY IF the above didn't throw
-      list.deleteOne()
+    .then(entry => {
+      // throw an error if current user doesn't own `entry`
+      requireOwnership(req, entry)
+      // delete the entry ONLY IF the above didn't throw
+      entry.deleteOne()
     })
     // send back 204 and no content if the deletion succeeded
     .then(() => res.sendStatus(204))

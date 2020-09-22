@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const listSchema = new mongoose.Schema({
+const entrySchema = new mongoose.Schema({
   title: {
     type: String,
     required: true
@@ -18,4 +18,4 @@ const listSchema = new mongoose.Schema({
   timestamps: true
 })
 
-module.exports = mongoose.model('List', listSchema)
+module.exports = mongoose.model('Entry', entrySchema)
