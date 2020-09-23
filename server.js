@@ -33,7 +33,7 @@ mongoose.connect(db, {
   useUnifiedTopology: true
 })
 
-// instantiate express application object
+// intiate express application object
 const app = express()
 
 // set CORS headers on response from this API using the `cors` NPM package
@@ -62,7 +62,6 @@ app.use(express.urlencoded({ extended: true }))
 app.use(requestLogger)
 
 // register route files
-// app.use(exampleRoutes)
 app.use(userRoutes)
 app.use(listRoutes)
 

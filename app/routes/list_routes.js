@@ -4,7 +4,7 @@ const passport = require('passport')
 
 const router = express.Router()
 
-const list = require('./../models/list')
+const List = require('./../models/list')
 
 const customErrors = require('../../lib/custom_errors')
 
@@ -17,7 +17,7 @@ const handle404 = require('./../../lib/custom_errors')
 const removeBlanks = require('../../lib/remove_blank_fields')
 
 router.get('/lists', requireToken, (req, res, next) => {
-  list.find({ owner: req.user.id })
+  List.find({ owner: req.user.id })
     .then((lists) => {
       res.status(200).json({ lists })
     })
@@ -25,7 +25,7 @@ router.get('/lists', requireToken, (req, res, next) => {
 })
 
 router.get('/lists/:id', requireToken, (req, res, next) => {
-  list.findById(req.params.id)
+  List.findById(req.params.id)
     .then(handle404)
     .then((list) => {
       res.status(200).json({ list: list.toObject() })
@@ -36,13 +36,13 @@ router.get('/lists/:id', requireToken, (req, res, next) => {
 router.post('/lists', requireToken, (req, res, next) => {
   req.body.owner = req.user._id
 
-  list.create(req.body)
+  List.create(req.body)
     .then(list => res.status(201).json({ list }))
     .catch(next)
 })
 
 router.patch('/lists/:id', requireToken, removeBlanks, (req, res, next) => {
-  list.findById(req.params.id)
+  List.findById(req.params.id)
     .then(handle404)
     .then(list => {
       requireOwnership(req, list)
@@ -54,7 +54,7 @@ router.patch('/lists/:id', requireToken, removeBlanks, (req, res, next) => {
 })
 
 router.delete('/lists/:id', requireToken, (req, res, next) => {
-  list.findById(req.params.id)
+  List.findById(req.params.id)
     .then(handle404)
     .then((list) => {
       requireOwnership(req, list)

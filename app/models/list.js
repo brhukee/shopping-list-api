@@ -18,6 +18,6 @@ const listSchema = new mongoose.Schema({
   timestamps: true
 })
 
-const list = mongoose.model('list', listSchema)
+const List = mongoose.model('List', listSchema)
 
-module.exports = list
+module.exports = List
