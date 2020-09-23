@@ -7,7 +7,7 @@ authentication and common middlewares.
 
 ## Installation
 
-1. [Download](../../archive/master.zip) this template.
+1.[Download](../../archive/master.zip) this template.
 1. Move the .zip file to your `sei/projects/` directory and Unzip it (creating a
    folder) -- **NOTE:** if the folder was already unzipped, use the `mv` command
    line to move it to the `sei/projects/` directory.
@@ -198,6 +198,6 @@ HTTP/1.1 204 No Content
 
 ## [License](LICENSE)
 
-1. All content is licensed under a CC­BY­NC­SA 4.0 license.
-1. All software code is licensed under GNU GPLv3. For commercial use or
+1.  All content is licensed under a CC­BY­NC­SA 4.0 license.
+1.  All software code is licensed under GNU GPLv3. For commercial use or
     alternative licensing, please contact legal@ga.co.
