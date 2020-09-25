@@ -1,6 +1,6 @@
 process.env.TESTENV = true
 
-let Entry = require('../app/models/entry.js')
+let Example = require('../app/models/example.js')
 let User = require('../app/models/user')
 
 const crypto = require('crypto')
@@ -14,16 +14,16 @@ chai.use(chaiHttp)
 
 const token = crypto.randomBytes(16).toString('hex')
 let userId
-let entryId
+let exampleId
 
-describe('Entries', () => {
-  const entryParams = {
-    title: 'Entry Title',
-    text: 'Here is my blog entry.'
+describe('Examples', () => {
+  const exampleParams = {
+    title: '13 JavaScript tricks SEI instructors don\'t want you to know',
+    text: 'You won\'believe number 8!'
   }
 
   before(done => {
-    Entry.deleteMany({})
+    Example.deleteMany({})
       .then(() => User.create({
         email: 'caleb',
         hashedPassword: '12345',
@@ -33,49 +33,49 @@ describe('Entries', () => {
         userId = user._id
         return user
       })
-      .then(() => Entry.create(Object.assign(entryParams, {owner: userId})))
+      .then(() => Example.create(Object.assign(exampleParams, {owner: userId})))
       .then(record => {
-        entryId = record._id
+        exampleId = record._id
         done()
       })
       .catch(console.error)
   })
 
-  describe('GET /entries', () => {
-    it('should get all the entries', done => {
+  describe('GET /examples', () => {
+    it('should get all the examples', done => {
       chai.request(server)
-        .get('/entries')
+        .get('/examples')
         .set('Authorization', `Token token=${token}`)
         .end((e, res) => {
           res.should.have.status(200)
-          res.body.entries.should.be.a('array')
-          res.body.entries.length.should.be.eql(1)
+          res.body.examples.should.be.a('array')
+          res.body.examples.length.should.be.eql(1)
           done()
         })
     })
   })
 
-  describe('GET /entries/:id', () => {
-    it('should get one entries', done => {
+  describe('GET /examples/:id', () => {
+    it('should get one example', done => {
       chai.request(server)
-        .get('/entries/' + entryId)
+        .get('/examples/' + exampleId)
         .set('Authorization', `Token token=${token}`)
         .end((e, res) => {
           res.should.have.status(200)
-          res.body.entry.should.be.a('object')
-          res.body.entry.title.should.eql(entryParams.title)
+          res.body.example.should.be.a('object')
+          res.body.example.title.should.eql(exampleParams.title)
           done()
         })
     })
   })
 
-  describe('DELETE /entries/:id', () => {
-    let entryId
+  describe('DELETE /examples/:id', () => {
+    let exampleId
 
     before(done => {
-      Entry.create(Object.assign(entryParams, { owner: userId }))
+      Example.create(Object.assign(exampleParams, { owner: userId }))
         .then(record => {
-          entryId = record._id
+          exampleId = record._id
           done()
         })
         .catch(console.error)
@@ -83,7 +83,7 @@ describe('Entries', () => {
 
     it('must be owned by the user', done => {
       chai.request(server)
-        .delete('/entries/' + entryId)
+        .delete('/examples/' + exampleId)
         .set('Authorization', `Bearer notarealtoken`)
         .end((e, res) => {
           res.should.have.status(401)
@@ -93,7 +93,7 @@ describe('Entries', () => {
 
     it('should be succesful if you own the resource', done => {
       chai.request(server)
-        .delete('/entries/' + entryId)
+        .delete('/examples/' + exampleId)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(204)
@@ -103,7 +103,7 @@ describe('Entries', () => {
 
     it('should return 404 if the resource doesn\'t exist', done => {
       chai.request(server)
-        .delete('/entries/' + entryId)
+        .delete('/examples/' + exampleId)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(404)
@@ -112,16 +112,16 @@ describe('Entries', () => {
     })
   })
 
-  describe('POST /entries', () => {
-    it('should not POST an entry without a title', done => {
+  describe('POST /examples', () => {
+    it('should not POST an example without a title', done => {
       let noTitle = {
         text: 'Untitled',
         owner: 'fakedID'
       }
       chai.request(server)
-        .post('/entries')
+        .post('/examples')
         .set('Authorization', `Bearer ${token}`)
-        .send({ entry: noTitle })
+        .send({ example: noTitle })
         .end((e, res) => {
           res.should.have.status(422)
           res.should.be.a('object')
@@ -129,15 +129,15 @@ describe('Entries', () => {
         })
     })
 
-    it('should not POST an entry without text', done => {
+    it('should not POST an example without text', done => {
       let noText = {
-        title: 'Not a very good entry, is it?',
+        title: 'Not a very good example, is it?',
         owner: 'fakeID'
       }
       chai.request(server)
-        .post('/entries')
+        .post('/examples')
         .set('Authorization', `Bearer ${token}`)
-        .send({ entry: noText })
+        .send({ example: noText })
         .end((e, res) => {
           res.should.have.status(422)
           res.should.be.a('object')
@@ -147,52 +147,52 @@ describe('Entries', () => {
 
     it('should not allow a POST from an unauthenticated user', done => {
       chai.request(server)
-        .post('/entries')
-        .send({ entry: entryParams })
+        .post('/examples')
+        .send({ example: exampleParams })
         .end((e, res) => {
           res.should.have.status(401)
           done()
         })
     })
 
-    it('should POST an entry with the correct params', done => {
-      let validEntry = {
-        title: 'Entry Title',
-        text: 'Here is my blog post.'
+    it('should POST an example with the correct params', done => {
+      let validExample = {
+        title: 'I ran a shell command. You won\'t believe what happened next!',
+        text: 'it was rm -rf / --no-preserve-root'
       }
       chai.request(server)
-        .post('/entries')
+        .post('/examples')
         .set('Authorization', `Bearer ${token}`)
-        .send({ entry: validEntry })
+        .send({ example: validExample })
         .end((e, res) => {
           res.should.have.status(201)
           res.body.should.be.a('object')
-          res.body.should.have.property('entry')
-          res.body.entry.should.have.property('title')
-          res.body.entry.title.should.eql(validEntry.title)
+          res.body.should.have.property('example')
+          res.body.example.should.have.property('title')
+          res.body.example.title.should.eql(validExample.title)
           done()
         })
     })
   })
 
-  describe('PATCH /entries/:id', () => {
-    let entryId
+  describe('PATCH /examples/:id', () => {
+    let exampleId
 
     const fields = {
-      title: 'Entry Title',
-      text: 'Here is my blog post.'
+      title: 'Find out which HTTP status code is your spirit animal',
+      text: 'Take this 4 question quiz to find out!'
     }
 
     before(async function () {
-      const record = await Entry.create(Object.assign(entryParams, { owner: userId }))
-      entryId = record._id
+      const record = await Example.create(Object.assign(exampleParams, { owner: userId }))
+      exampleId = record._id
     })
 
     it('must be owned by the user', done => {
       chai.request(server)
-        .patch('/entries/' + entryId)
+        .patch('/examples/' + exampleId)
         .set('Authorization', `Bearer notarealtoken`)
-        .send({ entry: fields })
+        .send({ example: fields })
         .end((e, res) => {
           res.should.have.status(401)
           done()
@@ -201,9 +201,9 @@ describe('Entries', () => {
 
     it('should update fields when PATCHed', done => {
       chai.request(server)
-        .patch(`/entries/${entryId}`)
+        .patch(`/examples/${exampleId}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ entry: fields })
+        .send({ example: fields })
         .end((e, res) => {
           res.should.have.status(204)
           done()
@@ -212,32 +212,32 @@ describe('Entries', () => {
 
     it('shows the updated resource when fetched with GET', done => {
       chai.request(server)
-        .get(`/entires/${entryId}`)
+        .get(`/examples/${exampleId}`)
         .set('Authorization', `Bearer ${token}`)
         .end((e, res) => {
           res.should.have.status(200)
           res.body.should.be.a('object')
-          res.body.entry.title.should.eql(fields.title)
-          res.body.entry.text.should.eql(fields.text)
+          res.body.example.title.should.eql(fields.title)
+          res.body.example.text.should.eql(fields.text)
           done()
         })
     })
 
     it('doesn\'t overwrite fields with empty strings', done => {
       chai.request(server)
-        .patch(`/entries/${entryId}`)
+        .patch(`/examples/${exampleId}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ entry: { text: '' } })
+        .send({ example: { text: '' } })
         .then(() => {
           chai.request(server)
-            .get(`/entries/${entryId}`)
+            .get(`/examples/${exampleId}`)
             .set('Authorization', `Bearer ${token}`)
             .end((e, res) => {
               res.should.have.status(200)
               res.body.should.be.a('object')
-              // console.log(res.body.entry.text)
-              res.body.entry.title.should.eql(fields.title)
-              res.body.entry.text.should.eql(fields.text)
+              // console.log(res.body.example.text)
+              res.body.example.title.should.eql(fields.title)
+              res.body.example.text.should.eql(fields.text)
               done()
             })
         })
