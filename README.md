@@ -1,7 +1,9 @@
 Shopping List
 
 A shopping list API that has Users and Lists
+/
 Client repo: { https://github.com/brhukee/shopping-list-client }
+/
 Deployed client: { https://brhukee.github.io/shopping-list-client/ }
 
 Project Planning.
